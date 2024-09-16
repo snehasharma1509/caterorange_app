@@ -38,16 +38,22 @@ const Header = ({ user }) => {
 
   return (
     <>
-      <header className="bg-green-500 text-white shadow-md py-4 px-6 w-full flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full bg-green-500 text-white shadow-md py-4 px-6 z-50 flex items-center justify-between">
+        {/* Profile Icon */}
         <div className="flex items-center">
           <UserCircleIcon className="h-8 w-8 cursor-pointer" onClick={toggleSidenav} />
         </div>
-        <h2 className="text-3xl font-bold mb-4 gradient-text animate-gradient">CORPORATE MENU</h2>
-        
-        <div className="relative">
+
+        {/* Corporate Title */}
+        <h2 className="text-3xl font-bold mb-4 gradient-text animate-gradient text-center flex-1">
+          CORPORATE MENU
+        </h2>
+
+        {/* Cart Icon */}
+        <div className="flex items-center">
           <Link to="/cart">
             <ShoppingCartIcon className="h-6 w-6 cursor-pointer" onClick={handleViewCart} />
-          </Link> 
+          </Link>
         </div>
       </header>
 
@@ -60,7 +66,7 @@ const Header = ({ user }) => {
       <div
         className={`fixed top-0 left-0 h-full w-64 bg-white text-black shadow-lg transform transition-transform duration-300 ease-in-out ${
           isSidenavOpen ? 'translate-x-0' : '-translate-x-full'
-        } z-50`} // Ensure sidenav is above the backdrop
+        } z-50 overflow-y-auto`} // Ensure sidenav is scrollable
       >
         {/* User profile details */}
         <div className="p-4 bg-green-500 text-white">
@@ -116,7 +122,9 @@ const Header = ({ user }) => {
       )}
 
       {/* Body Content */}
-      <Body isSidenavOpen={isSidenavOpen} />
+      <div className="pt-20 mt-5"> {/* Add padding to avoid overlap with fixed header */}
+        <Body isSidenavOpen={isSidenavOpen} />
+      </div>
     </>
   );
 };

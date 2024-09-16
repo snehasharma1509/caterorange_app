@@ -363,6 +363,7 @@ const getCorporateCart = async (req,res)=>{
     const customer_id = customer.customer_id;
    logger.info('customer_id',customer_id)
         const carts= await customer_model.getCarts( customer_id )
+         
         logger.info('carts in controller',carts)
         return res.json(
             carts
@@ -373,6 +374,39 @@ const getCorporateCart = async (req,res)=>{
    
 }
 
+const getCustomerDetails= async(req, res)=>{
+    try{
+        const token = req.headers['token'];
+        let verified_data;
+        try {
+            verified_data = jwt.verify(token, SECRET_KEY);
+        } catch (err) {
+            logger.error('Token verification failed:', err.message);
+            return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+        }
+    
+        const customer_email = verified_data.email;
+    
+        // Fetch the user ID from the database using the email
+        const customer = await customer_model.findCustomerEmail(customer_email);
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+    const data={
+        Name:customer.customer_name,
+        PhoneNumber: customer.customer_phonenumber,
+        email:customer.customer_email,
+        address:customer.customer_address
+    }
+       
+            return res.json(
+                data
+            );
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+}
+
 module.exports = {
     register,
     login,
@@ -381,5 +415,6 @@ module.exports = {
     customer_info,
     GetCorporateCategory,
     add_Corporate_Cart,
-    getCorporateCart
+    getCorporateCart,
+    getCustomerDetails
 };

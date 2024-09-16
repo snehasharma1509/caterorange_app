@@ -13,5 +13,6 @@ router.get('/customer/info',auth,customerController.customer_info);
 router.get('/customer/corporate/categories', customerController.GetCorporateCategory);
 router.post('/customer/cart/corporate',auth,customerController.add_Corporate_Cart)
 router.get('/customer/getCorporateCarts',customerController.getCorporateCart)
+router.get('/customer/getCustomerDetails', auth, customerController.getCustomerDetails)
 
 module.exports= router;

@@ -191,23 +191,34 @@ const [toDate, setToDate] = useState(null);
         } else if (dates.length === 0) {
             console.log('Oops! You did not mention the dates.');
         } else {
-            for (let i = 0; i < dates.length; i++) {
-                // Format the date to 'YYYY-MM-DD'
-                const formattedDate = new Date(dates[i]).toISOString().split('T')[0]; 
+            // for (let i = 0; i < dates.length; i++) {
+            //     // Format the date to 'YYYY-MM-DD'
+            //     const formattedDate = new Date(dates[i]).toISOString().split('T')[0]; 
                 
-                try {
-                    const response = await axios.post('http://localhost:7000/customer/cart/corporate', {
-                        category_id: foodtype.category_id,
-                        processing_date: formattedDate,  // Sending formatted date
-                        quantity:quantity,
-                    },{
-                        headers: { token: `${localStorage.getItem('accessToken')}` }
-                    });
-                    console.log(`Data for ${formattedDate} saved successfully!`, response.data);
-                } catch (error) {
-                    console.error(`Error saving data for ${formattedDate}`, error);
-                }
+            //     try {
+            //         const response = await axios.post('http://localhost:7000/customer/cart/corporate', {
+            //             category_id: foodtype.category_id,
+            //             processing_date: formattedDate,  // Sending formatted date
+            //             quantity:quantity,
+            //         },{
+            //             headers: { token: `${localStorage.getItem('accessToken')}` }
+            //         });
+            //         console.log(`Data for ${formattedDate} saved successfully!`, response.data);
+            //     } catch (error) {
+            //         console.error(`Error saving data for ${formattedDate}`, error);
+            //     }
+            // }
+        //    const response =await axios.post('http://localhost:7000/customer/cart/corporate',{
+        //     category_details:{
+        //         "type":foodtype.
+        //     }
+        //    })
+        console.log('in dt',{ foodtype , dates , quantity })
+        for (let i = 0; i < dates.length; i++) {
+            const data={
+                
             }
+        }
         }
     };
     

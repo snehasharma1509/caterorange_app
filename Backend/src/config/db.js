@@ -22,7 +22,10 @@ client.connect()
         await client.query(schema.customerTable);
         await client.query(schema.createCategoryTable);
         await client.query(schema.addressTable);
+        await client.query(schema.paymentTable);
         await client.query(schema.corporateCartTable);
+        await client.query(schema.corporateOrdersTable);
+        await client.query(schema.corporateOrderDetailsTable);
 
         logger.info('Tables created successfully or already exist');
     })
