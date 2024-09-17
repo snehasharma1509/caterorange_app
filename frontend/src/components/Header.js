@@ -17,6 +17,10 @@ const Header = ({ user }) => {
     navigate('/cart');
   };
 
+  const handleViewOrders=()=>{
+    navigate('/orders');
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userProfile');
@@ -86,7 +90,9 @@ const Header = ({ user }) => {
         </div>
         {/* Menu options */}
         <ul className="p-2 space-y-2">
-          <li className="p-2 border-b border-gray-200 cursor-pointer">My Orders</li>
+          <Link to='/orders'>
+          <li className="p-2 border-b border-gray-200 cursor-pointer" onClick={handleViewOrders}>My Orders</li>
+          </Link>
           <li className="p-2 border-b border-gray-200 cursor-pointer">Order Events</li>
           <li className="p-2 border-b border-gray-200 cursor-pointer">Address</li>
           <li className="p-2 border-b border-gray-200 cursor-pointer">Wallet</li>

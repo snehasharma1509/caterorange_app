@@ -7,6 +7,10 @@ import Home from './components/home';
 import Corporatecart from './components/Cart';
 import StoreProvider from './services/contextapi_state_management/store';
 import { jwtDecode } from 'jwt-decode';
+import CorporateOrders from './components/CorporateOrders';
+import SuccessPage from './components/SuccessPage';
+import PendingPage from './components/PendingPage';
+import Failurepage from './components/Failurepage';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -88,6 +92,13 @@ function App() {
             path="/cart"
             element={user ? <Corporatecart user={user} /> : <Navigate to="/" />}
           />
+          <Route
+            path="/orders"
+            element={user ? <CorporateOrders user={user} /> : <Navigate to="/" />}
+          />
+          <Route path="/success" element={<SuccessPage />} />
+        <Route path="/failure" element={<Failurepage />} />
+        <Route path="/pending" element={<PendingPage/>}/>
         </Routes>
       </Router>
     </StoreProvider>

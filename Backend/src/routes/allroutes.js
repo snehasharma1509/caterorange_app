@@ -16,5 +16,9 @@ router.get('/customer/getCorporateCarts',customerController.getCorporateCart)
 router.get('/customer/getCustomerDetails', auth, customerController.getCustomerDetails);
 router.put('/customer/updateCartItem/:corporatecart_id',customerController.updateCartItem);
 router.delete('/customer/removeCartItem/:corporatecart_id',customerController.deleteCartItem)
+router.post('/customer/corporateOrderDetails', auth,customerController.addCorporateOrderDetails);
+router.get('/customer/corporate/myorders',auth,customerController.getOrderDetails);
+router.post('/customer/corporate/transfer-cart-to-order', customerController.transferCartToOrder);
+
 
 module.exports= router;

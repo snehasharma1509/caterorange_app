@@ -397,7 +397,8 @@ const getCustomerDetails= async(req, res)=>{
         Name:customer.customer_name,
         PhoneNumber: customer.customer_phonenumber,
         email:customer.customer_email,
-        address:customer.customer_address
+        address:customer.customer_address,
+        id:customer.customer_id
     }
        
             return res.json(
@@ -448,6 +449,102 @@ const deleteCartItem = async (req, res) => {
     }
   };
   
+  const addCorporateOrderDetails = async (req, res) => {
+    const { corporateorder_id, orderDetails } = req.body;
+  
+    if (!corporateorder_id || !Array.isArray(orderDetails) || orderDetails.length === 0) {
+      return res.status(400).json({ message: 'Invalid data provided' });
+    }
+  
+    try {
+      const insertedDetails = [];
+      
+      for (const detail of orderDetails) {
+        const formattedDate = new Date(detail.date.split('/').reverse().join('-')); // Convert dd/mm/yyyy to yyyy-mm-dd
+        const detailData = {
+          processing_date: formattedDate,
+          delivery_status: detail.progress,
+          category_id: detail.category_id, // Assuming category_id is static, otherwise get it dynamically
+          quantity: detail.quantity,
+          active_quantity: detail.active_quantity,
+          media: null, // As per your requirement, media is not to be inserted
+          delivery_details: { status: detail.status }
+        };
+  
+        // Insert into the database using the model
+        const insertedDetail = await customer_model.insertCorporateOrderDetails(corporateorder_id, detailData);
+        insertedDetails.push(insertedDetail);
+      }
+  
+      res.status(201).json({
+        message: 'Order details added successfully',
+        data: insertedDetails
+      });
+    } catch (error) {
+      console.error('Error adding order details:', error);
+      res.status(500).json({ message: 'Server error', error });
+    }
+  }
+
+  const getOrderDetails = async (req, res) => {
+    // Extract order ID from request params
+
+    try {
+        const token = req.headers['token'];
+
+        // Verify the token and extract the user email
+        let verified_data;
+        try {
+            verified_data = jwt.verify(token, SECRET_KEY);
+        } catch (err) {
+            logger.error('Token verification failed:', err.message);
+            return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+        }
+
+        const customer_email = verified_data.email;
+
+        // Fetch the user ID from the database using the email
+        const customer = await customer_model.findCustomerEmail(customer_email);
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const customer_id = customer.customer_id;
+      const order = await customer_model.getOrderDetailsById(customer_id);
+      
+      logger.info('orderd details',order)
+
+      if (!order) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+
+      // Send back only corporateorder_generated_id and order_details
+      res.status(200).json({
+        id: order.corporateorder_generated_id,
+        details: order.order_details
+      });
+    } catch (error) {
+      console.error('Error retrieving order details:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+
+  const transferCartToOrder = async (req, res) => {
+    const { order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id } = req.body;
+    console.log("generated id",corporateorder_generated_id)
+    try {
+      // Insert the cart data into event_orders
+      const order = await customer_model.insertCartToOrder(order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id );
+     
+  
+      console.log('Success in controller for tarnsferring data to orders');
+      return res.json({
+        success: true
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 
 module.exports = {
@@ -461,5 +558,8 @@ module.exports = {
     getCorporateCart,
     getCustomerDetails,
     updateCartItem,
-    deleteCartItem
+    deleteCartItem,
+    addCorporateOrderDetails,
+    getOrderDetails,
+    transferCartToOrder
 };

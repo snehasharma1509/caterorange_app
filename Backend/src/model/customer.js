@@ -168,6 +168,64 @@ const deleteCart = async (corporatecart_id, date) => {
     }
 };
 
+const insertCorporateOrderDetails = async (corporateorder_id, details) => {
+    const query = `
+      INSERT INTO corporateorder_details 
+      (corporateorder_id, processing_date, delivery_status, category_id, quantity, active_quantity, media, delivery_details)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *;
+    `;
+    
+    const values = [
+      corporateorder_id,
+      details.processing_date,
+      details.delivery_status,
+      details.category_id,
+      details.quantity,
+      details.active_quantity,
+      details.media ? JSON.stringify(details.media) : null,
+      JSON.stringify(details.delivery_details)
+    ];
+  
+    const result = await client.query(query, values);
+    return result.rows[0];
+  };
+
+
+   // Function to get order_details and corporateorder_generated_id
+   const getOrderDetailsById = async (customer_id) => {
+    const query = `
+      SELECT corporateorder_generated_id, order_details 
+      FROM corporate_orders 
+      WHERE customer_id = $1
+    `;
+    
+    const values = [customer_id];
+    
+    try {
+      const result = await client.query(query, values);
+      return result.rows[0]; // Return the first matching row
+    } catch (error) {
+      throw new Error('Error retrieving corporate order details: ' + error.message);
+    }
+  }
+
+  const insertCartToOrder= async(order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id)=>{
+    try {
+        logger.info('in model', corporateorder_generated_id)
+        const result = await client.query(
+            DB_COMMANDS.INSERT_CART_TO_ORDER,
+            [order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id]
+        );
+        
+        logger.info('Cart Data added to orders table in model',result);
+        return result.rowCount > 0; // Return true if any row was updated
+    } catch (err) {
+        logger.error('Error transfering cart to orders in model', { error: err.message});
+        throw err;
+    }
+  }
+
 module.exports = {
     createCustomer,
     findCustomerEmail,
@@ -178,5 +236,8 @@ module.exports = {
     getCarts,
     findCustomerToken,
     updateQuantity,
-    deleteCart
+    deleteCart,
+    getOrderDetailsById,
+    insertCorporateOrderDetails,
+    insertCartToOrder
 };

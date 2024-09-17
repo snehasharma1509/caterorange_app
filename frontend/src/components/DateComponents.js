@@ -202,7 +202,8 @@ const [toDate, setToDate] = useState(null);
                     type: foodtype.category_name,
                     image: foodtype.category_media,
                     quantity: quantity,
-                    price:foodtype.category_price
+                    price:foodtype.category_price,
+                    category_id:foodtype.category_id
                 };
                 CartDetails.push(data);  // Push each data object into the CartDetails array
             }

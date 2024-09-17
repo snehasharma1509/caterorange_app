@@ -61,7 +61,7 @@ IGST FLOAT,
 CGST FLOAT,
 SGST FLOAT,
 customer_id INTEGER,
-paymentDate TIMESTAMP,
+paymentDate TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 );
 `
@@ -74,8 +74,9 @@ FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
   total_amount FLOAT,
   payment_id INTEGER,
   customer_address TEXT,  -- Ensure ADDRESS type is valid or adjust accordingly
-  ordered_at TIMESTAMP,
+  ordered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   payment_status VARCHAR(50),
+  corporateorder_generated_id VARCHAR(500),
   FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
   FOREIGN KEY (payment_id) REFERENCES payment(payment_id)
 );`
@@ -91,7 +92,7 @@ quantity INTEGER,
 active_quantity INTEGER,
 media JSON,
 delivery_details JSON,
-addedAt TIMESTAMP,
+addedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (category_id) REFERENCES category(category_id),
 FOREIGN KEY (corporateorder_id) REFERENCES corporate_orders(corporateorder_id)
 );

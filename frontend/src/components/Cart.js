@@ -8,11 +8,17 @@ const MyCart = () => {
   const [CartData, setCartData] = useState([]);
   const [sortedData,setSortedData]=useState([])
   const [cartIndividualData, setCartIndividualData] = useState([]);
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const OrderData=[]
+
   const [userData, setUserData] = useState({
     Name: '',
     email: '',
     PhoneNumber: '',
-    address: ''
+    address: '',
+    id:''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,6 +48,7 @@ const MyCart = () => {
         const response = await axios.get('http://localhost:7000/customer/getCustomerDetails', {
           headers: { token: `${localStorage.getItem('accessToken')}` },
         });
+        console.log('user',response.data)
         setUserData(response.data);
       } catch (error) {
         console.error('Error fetching customer data:', error);
@@ -77,6 +84,7 @@ const MyCart = () => {
 
   useEffect(() => {
     if (cartIndividualData.length > 0) {
+      console.log('each data',cartIndividualData)
       // Flatten the data since `content` is an object, not an array
       const flattenedData = cartIndividualData.map(cart => ({
         id: cart.id,
@@ -190,6 +198,74 @@ const MyCart = () => {
   const handleModalToggle = () => {
     setIsModalOpen(!isModalOpen);
   };
+
+  const handleViewPayment= async() =>{
+    try{
+    for(let i=0 ;i<cartIndividualData.length;i++)
+      {
+        const content =cartIndividualData[i].content;
+       const Data={
+        category_id:content.category_id,
+        processing_date:content.date,
+        delivery_status:'shipped',
+        quantity:content.quantity,
+        active_quantity:content.quantity,
+        media:null,
+        delivery_details:null
+       }
+        OrderData.push(Data)
+       
+      }
+      const OrderDataJSON = JSON.stringify(OrderData);
+    
+      const response = await axios.post('http://localhost:7000/customer/corporate/transfer-cart-to-order', {
+        order_details: OrderDataJSON ,
+        customer_id:userData.id,
+        total_amount:Total,
+        payment_id:null,
+        customer_address:'abc123',
+        payment_status:'success',
+        corporateorder_generated_id:'HS123'
+                
+            }
+        );
+
+    if (response.status === 200) {
+        console.log('Cart details added to orders', response.data);
+    } else {
+        console.error('Failed to add details to order_table:', response.data);
+    }
+} catch (error) {
+    console.error('Error adding details to order_table:', error);
+}
+
+    try{
+ 
+    const response = await axios.post('http://localhost:7000/corporate/pay', {
+      userid: userData.id,
+      amount: Total
+    });
+    if (response.data && response.data.redirectUrl) {
+      setRedirectUrl(response.data.redirectUrl);
+      // Redirect to the provided URL
+      window.location.href = response.data.redirectUrl;
+    } else {
+      setError('Unexpected response format.');
+    }
+   
+   
+  } catch (err) {
+    // Check for specific error details
+    if (err.response) {
+      setError(`Error: ${err.response.data.message || 'An error occurred. Please try again.'}`);
+    } else {
+      setError('Network error or no response from the server.');
+    }
+  } finally {
+    setLoading(false);
+  }
+  
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -330,7 +406,7 @@ const MyCart = () => {
           <h2 className="text-lg font-bold bg-yellow-400 p-2 rounded-md shadow-md">
             Total: {Total}/-
           </h2>
-          <button className="bg-purple-600 text-white p-2 px-4 rounded-lg shadow-md hover:bg-purple-700 transition">
+          <button className="bg-purple-600 text-white p-2 px-4 rounded-lg shadow-md hover:bg-purple-700 transition" onClick={handleViewPayment}>
             Pay Now
           </button>
         </div>
