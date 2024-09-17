@@ -13,6 +13,8 @@ router.get('/customer/info',auth,customerController.customer_info);
 router.get('/customer/corporate/categories', customerController.GetCorporateCategory);
 router.post('/customer/cart/corporate',auth,customerController.add_Corporate_Cart)
 router.get('/customer/getCorporateCarts',customerController.getCorporateCart)
-router.get('/customer/getCustomerDetails', auth, customerController.getCustomerDetails)
+router.get('/customer/getCustomerDetails', auth, customerController.getCustomerDetails);
+router.put('/customer/updateCartItem/:corporatecart_id',customerController.updateCartItem);
+router.delete('/customer/removeCartItem/:corporatecart_id',customerController.deleteCartItem)
 
 module.exports= router;

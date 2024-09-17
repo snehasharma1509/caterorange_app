@@ -86,10 +86,10 @@ const getCorporateCategories = async () => {
         throw new Error('Error fetching categories from the database');
     }
 };
-const add_cart = async (customer_id, category_id, processing_date, quantity) =>{
+const add_cart = async (customer_id, cart_order_details, total_amount) =>{
     try{
        const result = await client.query(
-    DB_COMMANDS.ADD_CORPORATECART,[customer_id, category_id, processing_date, quantity])
+    DB_COMMANDS.ADD_CORPORATECART,[customer_id, cart_order_details, total_amount ])
     logger.info('cart data added successfully');
     return result.rows[0];
 } catch (err) {
@@ -116,7 +116,57 @@ const getCarts = async ( customer_id ) => {
         throw new Error('Error fetching carts from the database');
     }
 };
+const updateQuantity=async(corporatecart_id,date,quantity) =>{
+    try {
+        logger.info('adding update quantity.',{corporatecart_id,date,quantity});
+        const data=await client.query(DB_COMMANDS.GETPRICE,[corporatecart_id,date])
+        console.log('price',data.rows[0])
+        const price=data.rows[0].price
+        const total=data.rows[0].total_amount
+        const quant=data.rows[0].quantity
+        const balance_amount=total-(price*quant)
+        const total_amount=(price*quantity)+balance_amount
+        console.log('amount',total_amount)
+        const res = await client.query(DB_COMMANDS.UPDATEQUANTITY,[corporatecart_id,date,quantity,total_amount]);
+        console.log('in updatequary',res)
+       
 
+        return res;
+    } catch (err) {
+        logger.error('Error fetching carts:', err);
+        throw new Error('Error fetching carts from the database');
+    }
+}
+const deleteCart = async (corporatecart_id, date) => {
+    try {
+        logger.info('Delete quantity.', { corporatecart_id, date });
+
+        // Step 1: Get the price and quantity for the item to be removed
+        const data = await client.query(DB_COMMANDS.GETPRICE, [corporatecart_id, date]);
+        if (data.rows.length === 0) {
+            throw new Error('Item not found in cart');
+        }
+
+        const { price, quantity, total_amount } = data.rows[0];
+        const amount = price * quantity;
+        console.log(amount)
+        const new_total_amount = total_amount - amount;
+        console.log(new_total_amount)
+
+        // Step 2: Update cart_order_details and total_amount
+        await client.query(DB_COMMANDS.DELETECARTITEM, [corporatecart_id, date, new_total_amount]);
+
+        // Step 3: Check if cart_order_details is empty after the update and delete if necessary
+        const result = await client.query(DB_COMMANDS.DELETECARTROW, [corporatecart_id]);
+
+        console.log('DELETE SUCCESS', result);
+
+        return result;
+    } catch (err) {
+        logger.error('Error deleting from cart:', err);
+        throw new Error('Error deleting from the database');
+    }
+};
 
 module.exports = {
     createCustomer,
@@ -126,5 +176,7 @@ module.exports = {
     getCorporateCategories,
     add_cart,
     getCarts,
-    findCustomerToken
+    findCustomerToken,
+    updateQuantity,
+    deleteCart
 };

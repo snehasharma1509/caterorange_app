@@ -182,45 +182,58 @@ const [toDate, setToDate] = useState(null);
             return newToggles;
         });
     };
-
     const handleSaveDates = async () => {
         const dates = selectedDates;
-    
+        const CartDetails = [];  // Initialize an empty array to store the details
+    var amount;
         if (quantity === 0) {
             console.log('Oops! You did not mention the quantity.');
         } else if (dates.length === 0) {
             console.log('Oops! You did not mention the dates.');
         } else {
-            // for (let i = 0; i < dates.length; i++) {
-            //     // Format the date to 'YYYY-MM-DD'
-            //     const formattedDate = new Date(dates[i]).toISOString().split('T')[0]; 
+            console.log('in dt', { foodtype, dates, quantity });
+            amount=(foodtype.category_price*quantity)*dates.length;
+            // Loop through the dates array and create the CartDetails array
+            for (let i = 0; i < dates.length; i++) {
                 
-            //     try {
-            //         const response = await axios.post('http://localhost:7000/customer/cart/corporate', {
-            //             category_id: foodtype.category_id,
-            //             processing_date: formattedDate,  // Sending formatted date
-            //             quantity:quantity,
-            //         },{
-            //             headers: { token: `${localStorage.getItem('accessToken')}` }
-            //         });
-            //         console.log(`Data for ${formattedDate} saved successfully!`, response.data);
-            //     } catch (error) {
-            //         console.error(`Error saving data for ${formattedDate}`, error);
-            //     }
-            // }
-        //    const response =await axios.post('http://localhost:7000/customer/cart/corporate',{
-        //     category_details:{
-        //         "type":foodtype.
-        //     }
-        //    })
-        console.log('in dt',{ foodtype , dates , quantity })
-        for (let i = 0; i < dates.length; i++) {
-            const data={
-                
+                const formattedDate = new Date(dates[i]).toISOString().split('T')[0];
+                const data = {
+                    date: formattedDate,
+                    type: foodtype.category_name,
+                    image: foodtype.category_media,
+                    quantity: quantity,
+                    price:foodtype.category_price
+                };
+                CartDetails.push(data);  // Push each data object into the CartDetails array
+            }
+    
+            // Convert CartDetails array into JSON format
+            const cartDetailsJSON = JSON.stringify(CartDetails);
+    
+            // Now you can insert it into your database's cart table
+            try {
+                const response = await axios.post('http://localhost:7000/customer/cart/corporate', {
+                    cart_order_details: cartDetailsJSON ,
+                    total_amount:amount // Pass the JSON string
+                    // You can calculate and pass the total amount
+                },
+                {
+                    headers: { token: `${localStorage.getItem('accessToken')}` }
+                }
+            );
+    
+                if (response.status === 200) {
+                    console.log('Cart details saved successfully:', response.data);
+                } else {
+                    console.error('Failed to save cart details:', response.data);
+                }
+            } catch (error) {
+                console.error('Error saving cart details:', error);
             }
         }
-        }
     };
+    
+
     
 
 

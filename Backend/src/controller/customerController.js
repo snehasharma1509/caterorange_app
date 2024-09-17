@@ -295,7 +295,7 @@ const GetCorporateCategory = async (req, res) => {
 }
 const add_Corporate_Cart = async (req,res) =>{
     try {
-        const { category_id, processing_date,quantity } = req.body;
+        const { cart_order_details,total_amount } = req.body;
 
         // Check for the token in the headers
         const token = req.headers['token'];
@@ -319,7 +319,7 @@ const add_Corporate_Cart = async (req,res) =>{
 
         const customer_id = customer.customer_id;
        logger.info('customer_id',customer_id)
-        const newCart = await customer_model.add_cart(customer_id, category_id, processing_date, quantity);
+        const newCart = await customer_model.add_cart(customer_id, cart_order_details, total_amount);
 
         if (!newCart) {
             throw new Error('cart creation failed');
@@ -365,6 +365,7 @@ const getCorporateCart = async (req,res)=>{
         const carts= await customer_model.getCarts( customer_id )
          
         logger.info('carts in controller',carts)
+       
         return res.json(
             carts
         );
@@ -407,6 +408,48 @@ const getCustomerDetails= async(req, res)=>{
         }
 }
 
+const updateCartItem= async(req,res) =>{
+    try {
+        console.log('in updatecartitem')
+        const corporatecart_id=req.params.corporatecart_id;
+        console.log("id is",corporatecart_id)
+        const {date,quantity}=req.body; 
+
+        const result = await customer_model.updateQuantity(corporatecart_id,date,quantity);
+        console.log('success in controller for update data')
+        return res.json({
+            success: true
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+const deleteCartItem = async (req, res) => {
+    try {
+      console.log('In deleteCartItem');
+      
+      const corporatecart_id = req.params.corporatecart_id;
+      const { date } = req.body;  // Destructure date from req.body
+      
+      console.log('Corporate Cart ID:', corporatecart_id);
+      console.log('Date in controller:', date);
+  
+      if (!date) {
+        return res.status(400).json({ error: 'Date is required' });
+      }
+  
+      const result = await customer_model.deleteCart(corporatecart_id, date);
+      console.log('Success in controller for delete data');
+      return res.json({
+        success: true
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+
+
 module.exports = {
     register,
     login,
@@ -416,5 +459,7 @@ module.exports = {
     GetCorporateCategory,
     add_Corporate_Cart,
     getCorporateCart,
-    getCustomerDetails
+    getCustomerDetails,
+    updateCartItem,
+    deleteCartItem
 };

@@ -11,7 +11,7 @@ module.exports = {
             lastLoginAt TIMESTAMP WITH TIME ZONE,
             access_token TEXT,
             wallet_amount INTEGER DEFAULT 0,
-            group_id INTEGER  -- Add foreign key constraint if needed
+            group_id INTEGER 
         )
     `,
     createCategoryTable: `
