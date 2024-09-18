@@ -11,7 +11,8 @@ const MyCart = () => {
   const [redirectUrl, setRedirectUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const OrderData=[]
+  const OrderData=[];
+  const [ orderDetails, setOrderDetails]= useState([])
 
   const [userData, setUserData] = useState({
     Name: '',
@@ -229,9 +230,10 @@ const MyCart = () => {
                 
             }
         );
-
+     setOrderDetails(response.data.order);
     if (response.status === 200) {
-        console.log('Cart details added to orders', response.data);
+        console.log('Cart details added to orders', response.data.order);
+        
     } else {
         console.error('Failed to add details to order_table:', response.data);
     }
@@ -239,33 +241,69 @@ const MyCart = () => {
     console.error('Error adding details to order_table:', error);
 }
 
-    try{
- 
-    const response = await axios.post('http://localhost:7000/corporate/pay', {
-      userid: userData.id,
-      amount: Total
-    });
-    if (response.data && response.data.redirectUrl) {
-      setRedirectUrl(response.data.redirectUrl);
-      // Redirect to the provided URL
-      window.location.href = response.data.redirectUrl;
-    } else {
-      setError('Unexpected response format.');
-    }
-   
-   
-  } catch (err) {
-    // Check for specific error details
-    if (err.response) {
-      setError(`Error: ${err.response.data.message || 'An error occurred. Please try again.'}`);
-    } else {
-      setError('Network error or no response from the server.');
-    }
-  } finally {
-    setLoading(false);
-  }
+
+try{
   
-  }
+  for(let i=0; i<orderDetails.length; i++){
+    const OD=orderDetails[i].order_details
+    const response = await axios.post('http://localhost:7000/customer/corporateOrderDetails', {
+      corporateorder_id:orderDetails[i].corporateorder_id,
+      processing_date:OD.processing_date ,
+      delivery_status: OD.delivery_status,
+      category_id:OD.category_id ,
+      quantity:OD.quantity ,
+      active_quantity:OD.active_quantity ,
+      media:OD.media ,
+      delivery_details: OD.delivery_details
+    
+          });
+        }
+        console.log('orderd details sending:', orderDetails);
+    if (response.status === 200) {
+            console.log('Cart details added to orders', response.data);    
+        } else {
+            console.error('Failed to add details to order_table:', response.data);
+        }
+    } catch (error) {
+        console.error('Error adding details to order_table:', error);
+    }
+  
+
+
+  // try{
+   
+  //   const response= axios.post('http://localhost:7000/customer/corporateOrderDetails',{
+  //     order_id,
+  //     order_details: OrderDataJSON 
+  //   })
+
+  // }
+
+  //   try{
+ 
+  //   const response = await axios.post('http://localhost:7000/corporate/pay', {
+  //     userid: userData.id,
+  //     amount: Total
+  //   });
+  //   if (response.data && response.data.redirectUrl) {
+  //     setRedirectUrl(response.data.redirectUrl);
+  //     // Redirect to the provided URL
+  //     window.location.href = response.data.redirectUrl;
+  //   } else {
+  //     setError('Unexpected response format.');
+  //   }
+  // } catch (err) {
+  //   // Check for specific error details
+  //   if (err.response) {
+  //     setError(`Error: ${err.response.data.message || 'An error occurred. Please try again.'}`);
+  //   } else {
+  //     setError('Network error or no response from the server.');
+  //   }
+  // } finally {
+  //   setLoading(false);
+  // }
+}
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

@@ -85,7 +85,7 @@ corporateOrderDetailsTable:`
 CREATE TABLE IF NOT EXISTS corporateorder_details (
 order_detail_id SERIAL PRIMARY KEY,
 corporateorder_id INTEGER,
-processing_date DATE UNIQUE,
+processing_date DATE,
 delivery_status VARCHAR(50),
 category_id INTEGER,
 quantity INTEGER,

@@ -450,19 +450,19 @@ const deleteCartItem = async (req, res) => {
   };
   
   const addCorporateOrderDetails = async (req, res) => {
-    const { corporateorder_id, orderDetails } = req.body;
+    const { corporateorder_id, order_details } = req.body;
   
-    if (!corporateorder_id || !Array.isArray(orderDetails) || orderDetails.length === 0) {
+    if (!corporateorder_id || !Array.isArray(order_details) || order_details.length === 0) {
       return res.status(400).json({ message: 'Invalid data provided' });
     }
   
     try {
       const insertedDetails = [];
       
-      for (const detail of orderDetails) {
-        const formattedDate = new Date(detail.date.split('/').reverse().join('-')); // Convert dd/mm/yyyy to yyyy-mm-dd
+      for (const detail of order_details) {
+        
         const detailData = {
-          processing_date: formattedDate,
+          processing_date: detail.processing_date,
           delivery_status: detail.progress,
           category_id: detail.category_id, // Assuming category_id is static, otherwise get it dynamically
           quantity: detail.quantity,
@@ -536,10 +536,11 @@ const deleteCartItem = async (req, res) => {
       // Insert the cart data into event_orders
       const order = await customer_model.insertCartToOrder(order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id );
      
-  
+      console.log("this is order details:",order)
       console.log('Success in controller for tarnsferring data to orders');
       return res.json({
-        success: true
+        success: true,
+        order
       });
     } catch (err) {
       res.status(500).json({ error: err.message });

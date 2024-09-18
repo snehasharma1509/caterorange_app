@@ -219,7 +219,7 @@ const insertCorporateOrderDetails = async (corporateorder_id, details) => {
         );
         
         logger.info('Cart Data added to orders table in model',result);
-        return result.rowCount > 0; // Return true if any row was updated
+        return result.rows[0]; // Return true if any row was updated
     } catch (err) {
         logger.error('Error transfering cart to orders in model', { error: err.message});
         throw err;
