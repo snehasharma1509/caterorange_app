@@ -4,7 +4,8 @@ const customerController = require('../controller/customerController');
 const auth = require('../middleware/auth.js');
 const logger = require('../config/logger');
 const client = require('../config/db.js');
-
+const paymentController = require('../controller/paymentController');
+router.post('/insert-payment',paymentController.payment)
 router.post('/customer/login',customerController.login)
 router.post('/customer/register',customerController.register)
 router.post('/customer/forgotPassword',customerController.forgotPassword);
@@ -16,9 +17,9 @@ router.get('/customer/getCorporateCarts',customerController.getCorporateCart)
 router.get('/customer/getCustomerDetails', auth, customerController.getCustomerDetails);
 router.put('/customer/updateCartItem/:corporatecart_id',customerController.updateCartItem);
 router.delete('/customer/removeCartItem/:corporatecart_id',customerController.deleteCartItem)
-router.post('/customer/corporateOrderDetails', auth,customerController.addCorporateOrderDetails);
+router.post('/customer/corporateOrderDetails',customerController.addCorporateOrderDetails);
 router.get('/customer/corporate/myorders',auth,customerController.getOrderDetails);
 router.post('/customer/corporate/transfer-cart-to-order', customerController.transferCartToOrder);
-
+router.post('/customer/getcategorynameByid', customerController.getcategorynameById)
 
 module.exports= router;

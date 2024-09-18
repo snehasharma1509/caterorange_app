@@ -450,37 +450,22 @@ const deleteCartItem = async (req, res) => {
   };
   
   const addCorporateOrderDetails = async (req, res) => {
-    const { corporateorder_id, order_details } = req.body;
-  
-    if (!corporateorder_id || !Array.isArray(order_details) || order_details.length === 0) {
-      return res.status(400).json({ message: 'Invalid data provided' });
-    }
+    const { corporateorder_id,  processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details} = req.body;
   
     try {
-      const insertedDetails = [];
-      
-      for (const detail of order_details) {
-        
-        const detailData = {
-          processing_date: detail.processing_date,
-          delivery_status: detail.progress,
-          category_id: detail.category_id, // Assuming category_id is static, otherwise get it dynamically
-          quantity: detail.quantity,
-          active_quantity: detail.active_quantity,
-          media: null, // As per your requirement, media is not to be inserted
-          delivery_details: { status: detail.status }
-        };
+     
+     console.log('hi ',{corporateorder_id,  processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details})
   
         // Insert into the database using the model
-        const insertedDetail = await customer_model.insertCorporateOrderDetails(corporateorder_id, detailData);
-        insertedDetails.push(insertedDetail);
-      }
+        const insertedDetail = await customer_model.insertCorporateOrderDetails(corporateorder_id, processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details );
+       console.log("inse3rted details ",insertedDetail)
   
-      res.status(201).json({
-        message: 'Order details added successfully',
-        data: insertedDetails
-      });
-    } catch (error) {
+    res.status(201).json({
+      success: true,
+      message: 'Order details added successfully',
+      data: insertedDetail
+    });}
+     catch (error) {
       console.error('Error adding order details:', error);
       res.status(500).json({ message: 'Server error', error });
     }
@@ -510,9 +495,9 @@ const deleteCartItem = async (req, res) => {
         }
 
         const customer_id = customer.customer_id;
+        console.log('id',customer_id)
       const order = await customer_model.getOrderDetailsById(customer_id);
       
-      logger.info('orderd details',order)
 
       if (!order) {
         return res.status(404).json({ message: 'Order not found' });
@@ -520,8 +505,8 @@ const deleteCartItem = async (req, res) => {
 
       // Send back only corporateorder_generated_id and order_details
       res.status(200).json({
-        id: order.corporateorder_generated_id,
-        details: order.order_details
+       
+        data:order
       });
     } catch (error) {
       console.error('Error retrieving order details:', error);
@@ -547,6 +532,22 @@ const deleteCartItem = async (req, res) => {
     }
   };
 
+  const getcategorynameById= async(req, res)=>{
+     const { categoryId }= req.body;
+
+     try{
+        const categoryname= await customer_model.getcategoryname(categoryId);
+
+        console.log('category name in controler', categoryname);
+        return res.json({
+            success: true,
+            categoryname
+          });
+        } catch (err) {
+          res.status(500).json({ error: err.message });
+        }
+  }
+
 
 module.exports = {
     register,
@@ -562,5 +563,6 @@ module.exports = {
     deleteCartItem,
     addCorporateOrderDetails,
     getOrderDetails,
-    transferCartToOrder
+    transferCartToOrder,
+    getcategorynameById
 };

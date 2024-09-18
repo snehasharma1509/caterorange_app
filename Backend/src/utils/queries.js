@@ -83,7 +83,10 @@ DELETECARTROW:`
 INSERT_CART_TO_ORDER:` INSERT INTO corporate_orders
         ( order_details ,customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id) 
         VALUES ($1, $2, $3, $4, $5, $6 ,$7) 
-        RETURNING *`
+        RETURNING *`,
+  GET_CATEGORY_NAME: `
+      SELECT category_name FROM category WHERE category_id= $1
+  `
 
 };
 

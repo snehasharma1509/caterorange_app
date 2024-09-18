@@ -182,61 +182,73 @@ const [toDate, setToDate] = useState(null);
             return newToggles;
         });
     };
-    const handleSaveDates = async () => {
-        const dates = selectedDates;
-        const CartDetails = [];  // Initialize an empty array to store the details
-    var amount;
-        if (quantity === 0) {
-            console.log('Oops! You did not mention the quantity.');
-        } else if (dates.length === 0) {
-            console.log('Oops! You did not mention the dates.');
+
+
+// Custom date formatting function
+const formatDate = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const handleSaveDates = async () => {
+    const dates = selectedDates;
+    const CartDetails = [];
+    let amount;
+
+    if (quantity === 0) {
+        console.log('Oops! You did not mention the quantity.');
+        return;
+    } else if (dates.length === 0) {
+        console.log('Oops! You did not mention the dates.');
+        return;
+    }
+
+    console.log('Input dates:', dates);
+    amount = (foodtype.category_price * quantity) * dates.length;
+
+    for (let i = 0; i < dates.length; i++) {
+        const originalDate = dates[i];
+        const formattedDate = formatDate(originalDate);
+        console.log(`Original date: ${originalDate}, Formatted date: ${formattedDate}`);
+        
+        const data = {
+            date: formattedDate,
+            type: foodtype.category_name,
+            image: foodtype.category_media,
+            quantity: quantity,
+            price: foodtype.category_price,
+            category_id: foodtype.category_id
+        };
+        
+        CartDetails.push(data);
+    }
+
+    console.log("CartDetails before JSON conversion:", CartDetails);
+
+    // Convert CartDetails array into JSON format
+    const cartDetailsJSON = JSON.stringify(CartDetails);
+    console.log("CartDetails after JSON conversion:", JSON.parse(cartDetailsJSON));
+
+    try {
+        const response = await axios.post('http://localhost:7000/customer/cart/corporate', {
+            cart_order_details: cartDetailsJSON,
+            total_amount: amount
+        }, {
+            headers: { token: `${localStorage.getItem('accessToken')}` }
+        });
+
+        if (response.status === 200) {
+            console.log('Cart details saved successfully:', response.data);
         } else {
-            console.log('in dt', { foodtype, dates, quantity });
-            amount=(foodtype.category_price*quantity)*dates.length;
-            // Loop through the dates array and create the CartDetails array
-            for (let i = 0; i < dates.length; i++) {
-                
-                const formattedDate = new Date(dates[i]).toISOString().split('T')[0];
-                const data = {
-                    date: formattedDate,
-                    type: foodtype.category_name,
-                    image: foodtype.category_media,
-                    quantity: quantity,
-                    price:foodtype.category_price,
-                    category_id:foodtype.category_id
-                };
-                CartDetails.push(data);  // Push each data object into the CartDetails array
-            }
-    
-            // Convert CartDetails array into JSON format
-            const cartDetailsJSON = JSON.stringify(CartDetails);
-    
-            // Now you can insert it into your database's cart table
-            try {
-                const response = await axios.post('http://localhost:7000/customer/cart/corporate', {
-                    cart_order_details: cartDetailsJSON ,
-                    total_amount:amount // Pass the JSON string
-                    // You can calculate and pass the total amount
-                },
-                {
-                    headers: { token: `${localStorage.getItem('accessToken')}` }
-                }
-            );
-    
-                if (response.status === 200) {
-                    console.log('Cart details saved successfully:', response.data);
-                } else {
-                    console.error('Failed to save cart details:', response.data);
-                }
-            } catch (error) {
-                console.error('Error saving cart details:', error);
-            }
+            console.error('Failed to save cart details:', response.data);
         }
-    };
-    
-
-    
-
+    } catch (error) {
+        console.error('Error saving cart details:', error);
+    }
+};
 
     const handleclear = () => {
         setSelectedDates([]);

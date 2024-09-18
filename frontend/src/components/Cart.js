@@ -84,6 +84,7 @@ const MyCart = () => {
   }, [CartData]);
 
   useEffect(() => {
+  
     if (cartIndividualData.length > 0) {
       console.log('each data',cartIndividualData)
       // Flatten the data since `content` is an object, not an array
@@ -94,12 +95,12 @@ const MyCart = () => {
   
       // Sort the items based on the `date` field
       const sortedCartItems = flattenedData.sort((a, b) => new Date(a.date) - new Date(b.date));
-      console.log('sorted', sortedCartItems);
       setSortedData(sortedCartItems);
     }
   }, [cartIndividualData]);
   
   console.log('sorted',sortedData)
+  console.log('each data',cartIndividualData)
 
 
   const handleIncrement = async (index) => {
@@ -200,109 +201,216 @@ const MyCart = () => {
     setIsModalOpen(!isModalOpen);
   };
 
-  const handleViewPayment= async() =>{
-    try{
-    for(let i=0 ;i<cartIndividualData.length;i++)
-      {
-        const content =cartIndividualData[i].content;
-       const Data={
-        category_id:content.category_id,
-        processing_date:content.date,
-        delivery_status:'shipped',
-        quantity:content.quantity,
-        active_quantity:content.quantity,
-        media:null,
-        delivery_details:null
-       }
-        OrderData.push(Data)
-       
+  const handleViewPayment = async () => {
+    try {
+      // First, prepare the order data and send it to create the order
+      let OrderData = []; // Initialize the array
+      for (let i = 0; i < sortedData.length; i++) {
+        const content = sortedData[i];
+        const Data = {
+          category_id: content.category_id,
+          processing_date: content.date,
+          delivery_status: 'shipped',
+          quantity: content.quantity,
+          active_quantity: content.quantity,
+          media: null,
+          delivery_details: null
+        };
+        OrderData.push(Data);
       }
       const OrderDataJSON = JSON.stringify(OrderData);
-    
+  
       const response = await axios.post('http://localhost:7000/customer/corporate/transfer-cart-to-order', {
-        order_details: OrderDataJSON ,
-        customer_id:userData.id,
-        total_amount:Total,
-        payment_id:null,
-        customer_address:'abc123',
-        payment_status:'success',
-        corporateorder_generated_id:'HS123'
-                
-            }
-        );
-     setOrderDetails(response.data.order);
-    if (response.status === 200) {
+        order_details: OrderDataJSON,
+        customer_id: userData.id,
+        total_amount: Total,
+        payment_id: null,
+        customer_address: 'abc123',
+        payment_status: 'success',
+        corporateorder_generated_id: 'HS123'
+      });
+  
+      // Set the order details from the response
+      setOrderDetails(response.data.order);
+  
+      if (response.status === 200) {
         console.log('Cart details added to orders', response.data.order);
-        
-    } else {
+  
+        // Now call the function to handle the second API request
+        await PaymentDetails();
+        await sendOrderDetails(response.data.order);
+      } else {
         console.error('Failed to add details to order_table:', response.data);
-    }
-} catch (error) {
-    console.error('Error adding details to order_table:', error);
-}
-
-
-try{
-  
-  for(let i=0; i<orderDetails.length; i++){
-    const OD=orderDetails[i].order_details
-    const response = await axios.post('http://localhost:7000/customer/corporateOrderDetails', {
-      corporateorder_id:orderDetails[i].corporateorder_id,
-      processing_date:OD.processing_date ,
-      delivery_status: OD.delivery_status,
-      category_id:OD.category_id ,
-      quantity:OD.quantity ,
-      active_quantity:OD.active_quantity ,
-      media:OD.media ,
-      delivery_details: OD.delivery_details
-    
-          });
-        }
-        console.log('orderd details sending:', orderDetails);
-    if (response.status === 200) {
-            console.log('Cart details added to orders', response.data);    
-        } else {
-            console.error('Failed to add details to order_table:', response.data);
-        }
+      }
     } catch (error) {
-        console.error('Error adding details to order_table:', error);
+      console.error('Error adding details to order_table:', error);
     }
+  };
+  
+  // Create a separate function to handle the second API call for sending order details
+  const sendOrderDetails = async (orderDetails) => {
+    try {
+      let response;
+      let details = orderDetails.order_details;
+      console.log('length', details.length);
+  
+      for (let i = 0; i < details.length; i++) {
+        response = await axios.post('http://localhost:7000/customer/corporateOrderDetails', {
+          corporateorder_id: orderDetails.corporateorder_id,
+          processing_date: details[i].processing_date,
+          delivery_status: details[i].delivery_status,
+          category_id: details[i].category_id,
+          quantity: details[i].quantity,
+          active_quantity: details[i].active_quantity,
+          media: details[i].media,
+          delivery_details: details[i].delivery_details
+        });
+        console.log('Order details sent in loop');
+      }
+  
+      console.log('Order details sent:', orderDetails);
+      if (response) {
+        console.log('Order details successfully added:', response.data);
+      } else {
+        console.error('Failed to add details to order_table:', response.data);
+      }
+    } catch (error) {
+      console.error('Error sending order details:', error);
+    }
+  };
+
+  const PaymentDetails= async()=>{
+    try{
+
+          const token=localStorage.getItem('accessToken')
+          const response = await axios.post('http://localhost:7000/pay', 
+            {amount: Total},{headers: { access_token: `${localStorage.getItem('accessToken')}` },
+          });
+          if (response.data && response.data.redirectUrl) {
+            setRedirectUrl(response.data.redirectUrl);
+            // Redirect to the provided URL
+            window.location.href = response.data.redirectUrl;
+          } else {
+            setError('Unexpected response format.');
+          }
+        } catch (err) {
+          // Check for specific error details
+          if (err.response) {
+            setError(`Error: ${err.response.data.message || 'An error occurred. Please try again.'}`);
+          } else {
+            setError('Network error or no response from the server.');
+          }
+        } finally {
+          setLoading(false);
+        }
+  }
+  
+//   const handleViewPayment= async() =>{
+//     try{
+//     for(let i=0 ;i<cartIndividualData.length;i++)
+//       {
+//         const content =cartIndividualData[i].content;
+//        const Data={
+//         category_id:content.category_id,
+//         processing_date:content.date,
+//         delivery_status:'shipped',
+//         quantity:content.quantity,
+//         active_quantity:content.quantity,
+//         media:null,
+//         delivery_details:null
+//        }
+//         OrderData.push(Data)
+       
+//       }
+//       const OrderDataJSON = JSON.stringify(OrderData);
+    
+//       const response = await axios.post('http://localhost:7000/customer/corporate/transfer-cart-to-order', {
+//         order_details: OrderDataJSON ,
+//         customer_id:userData.id,
+//         total_amount:Total,
+//         payment_id:null,
+//         customer_address:'abc123',
+//         payment_status:'success',
+//         corporateorder_generated_id:'HS123'
+                
+//             }
+//         );
+//      setOrderDetails(response.data.order);
+//     if (response.status === 200) {
+//         console.log('Cart details added to orders', response.data.order);
+        
+//     } else {
+//         console.error('Failed to add details to order_table:', response.data);
+//     }
+// } catch (error) {
+//     console.error('Error adding details to order_table:', error);
+// }
+
+
+// try{
+//   let response;
+// let details=orderDetails.order_details
+// console.log('length',details.length)
+//   for(let i=0; i<details.length; i++){
+
+//     response = await axios.post('http://localhost:7000/customer/corporateOrderDetails', {
+//       corporateorder_id:orderDetails.corporateorder_id,
+//       processing_date:details[i].processing_date ,
+//       delivery_status: details[i].delivery_status,
+//       category_id:details[i].category_id ,
+//       quantity:details[i].quantity ,
+//       active_quantity:details[i].active_quantity ,
+//       media:details[i].media ,
+//       delivery_details: details[i].delivery_details
+    
+//           });
+//           console.log('in loop')
+//         }
+//         console.log('orderd details sending:', orderDetails);
+//     if (response.success) {
+//             console.log('Cart details added to orders here...', response.data);    
+//         } else {
+//             console.error('Failed to add details to order_table:', response.data);
+//         }
+//     } catch (error) {
+//         console.error('Error adding details to order_table:', error);
+//     }
   
 
 
-  // try{
+//   // try{
    
-  //   const response= axios.post('http://localhost:7000/customer/corporateOrderDetails',{
-  //     order_id,
-  //     order_details: OrderDataJSON 
-  //   })
+//   //   const response= axios.post('http://localhost:7000/customer/corporateOrderDetails',{
+//   //     order_id,
+//   //     order_details: OrderDataJSON 
+//   //   })
 
-  // }
+//   // }
 
-  //   try{
+//   //   try{
  
-  //   const response = await axios.post('http://localhost:7000/corporate/pay', {
-  //     userid: userData.id,
-  //     amount: Total
-  //   });
-  //   if (response.data && response.data.redirectUrl) {
-  //     setRedirectUrl(response.data.redirectUrl);
-  //     // Redirect to the provided URL
-  //     window.location.href = response.data.redirectUrl;
-  //   } else {
-  //     setError('Unexpected response format.');
-  //   }
-  // } catch (err) {
-  //   // Check for specific error details
-  //   if (err.response) {
-  //     setError(`Error: ${err.response.data.message || 'An error occurred. Please try again.'}`);
-  //   } else {
-  //     setError('Network error or no response from the server.');
-  //   }
-  // } finally {
-  //   setLoading(false);
-  // }
-}
+//   //   const response = await axios.post('http://localhost:7000/corporate/pay', {
+//   //     userid: userData.id,
+//   //     amount: Total
+//   //   });
+//   //   if (response.data && response.data.redirectUrl) {
+//   //     setRedirectUrl(response.data.redirectUrl);
+//   //     // Redirect to the provided URL
+//   //     window.location.href = response.data.redirectUrl;
+//   //   } else {
+//   //     setError('Unexpected response format.');
+//   //   }
+//   // } catch (err) {
+//   //   // Check for specific error details
+//   //   if (err.response) {
+//   //     setError(`Error: ${err.response.data.message || 'An error occurred. Please try again.'}`);
+//   //   } else {
+//   //     setError('Network error or no response from the server.');
+//   //   }
+//   // } finally {
+//   //   setLoading(false);
+//   // }
+// }
   
 
   const handleInputChange = (e) => {

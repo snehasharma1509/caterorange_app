@@ -168,7 +168,8 @@ const deleteCart = async (corporatecart_id, date) => {
     }
 };
 
-const insertCorporateOrderDetails = async (corporateorder_id, details) => {
+const insertCorporateOrderDetails = async (corporateorder_id, processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details ) => {
+    console.log('in model')
     const query = `
       INSERT INTO corporateorder_details 
       (corporateorder_id, processing_date, delivery_status, category_id, quantity, active_quantity, media, delivery_details)
@@ -176,18 +177,10 @@ const insertCorporateOrderDetails = async (corporateorder_id, details) => {
       RETURNING *;
     `;
     
-    const values = [
-      corporateorder_id,
-      details.processing_date,
-      details.delivery_status,
-      details.category_id,
-      details.quantity,
-      details.active_quantity,
-      details.media ? JSON.stringify(details.media) : null,
-      JSON.stringify(details.delivery_details)
-    ];
+    
   
-    const result = await client.query(query, values);
+    const result = await client.query(query,[corporateorder_id, processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details ]);
+    console.log("success in model",result)
     return result.rows[0];
   };
 
@@ -195,16 +188,17 @@ const insertCorporateOrderDetails = async (corporateorder_id, details) => {
    // Function to get order_details and corporateorder_generated_id
    const getOrderDetailsById = async (customer_id) => {
     const query = `
-      SELECT corporateorder_generated_id, order_details 
+      SELECT corporateorder_generated_id, order_details,ordered_at
       FROM corporate_orders 
-      WHERE customer_id = $1
+      WHERE customer_id = $1 AND payment_status='success'
     `;
     
     const values = [customer_id];
     
     try {
       const result = await client.query(query, values);
-      return result.rows[0]; // Return the first matching row
+      console.log(result.rows)
+      return result.rows; // Return the first matching row
     } catch (error) {
       throw new Error('Error retrieving corporate order details: ' + error.message);
     }
@@ -226,6 +220,18 @@ const insertCorporateOrderDetails = async (corporateorder_id, details) => {
     }
   }
 
+  const getcategoryname= async(categoryId)=>{
+    try{
+        const category_name= await client.query(DB_COMMANDS.GET_CATEGORY_NAME,[categoryId]);
+        
+        logger.info('category name fetched in model', category_name);
+        return category_name.rows[0];
+    }catch (err) {
+        logger.error('Error fetching category_name', { error: err.message});
+        throw err;
+    }
+  }
+
 module.exports = {
     createCustomer,
     findCustomerEmail,
@@ -239,5 +245,6 @@ module.exports = {
     deleteCart,
     getOrderDetailsById,
     insertCorporateOrderDetails,
-    insertCartToOrder
+    insertCartToOrder,
+    getcategoryname
 };
