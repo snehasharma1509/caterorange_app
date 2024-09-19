@@ -442,7 +442,7 @@ const deleteCartItem = async (req, res) => {
   
     try {
      
-     console.log('hi ',{corporateorder_id,  processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details})
+     logger.info('hi ',{corporateorder_id,  processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details})
   
         // Insert into the database using the model
         const insertedDetail = await customer_model.insertCorporateOrderDetails(corporateorder_id, processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details );
@@ -463,7 +463,7 @@ const deleteCartItem = async (req, res) => {
 
     try {
         const token = req.headers['token'];
-
+        logger.info('hi myorder', token)
         // Verify the token and extract the user email
         let verified_data;
         try {
@@ -474,16 +474,20 @@ const deleteCartItem = async (req, res) => {
         }
 
         const customer_email = verified_data.email;
-
+        
         // Fetch the user ID from the database using the email
         const customer = await customer_model.findCustomerEmail(customer_email);
         if (!customer) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-
+       // logger.info('customer data', customer)
+  // console.log("sneha",customer.customer_id  )
         const customer_id = customer.customer_id;
+   console.log('console',customer_id)
+        logger.info('customer_id:' , customer_id)
       const order = await customer_model.getOrderDetailsById(customer_id);
-      
+      console.log(order)
+      logger.info("orders in controller:", order)
 
       if (!order) {
         return res.status(404).json({ message: 'Order not found' });
@@ -501,10 +505,10 @@ const deleteCartItem = async (req, res) => {
   }
 
   const transferCartToOrder = async (req, res) => {
-    const { order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id } = req.body;
+    const { order_details , customer_id , total_amount , customer_address , payment_status , corporateorder_generated_id } = req.body;
     try {
       // Insert the cart data into event_orders
-      const order = await customer_model.insertCartToOrder(order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id );
+      const order = await customer_model.insertCartToOrder(order_details , customer_id , total_amount  , customer_address , payment_status , corporateorder_generated_id );
     
       return res.json({
         success: true,

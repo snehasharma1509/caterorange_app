@@ -4,7 +4,6 @@ const client = require('../config/db.js');
 
 const createCustomer = async (customer_name, customer_email, customer_password, customer_phonenumber, access_token) => {
     try {
-        console.log('in model',access_token)
         const result = await client.query(
             DB_COMMANDS.CUSTOMER_INSERT,
             [customer_name, customer_email, customer_password, customer_phonenumber, access_token]
@@ -25,7 +24,6 @@ const findCustomerEmail = async (customer_email) => {
             logger.error('No customer found with email:', customer_email);
             return null;
         }
-        logger.info('result in model',result.rows[0])
         return result.rows[0];  // Return the customer details, or undefined if not found
     } catch (err) {
         logger.error('Error querying the database for customer_email', { error: err.message });
@@ -107,7 +105,6 @@ const getCarts = async ( customer_id ) => {
             logger.info('No carts found');
         } else {
             logger.info(`Corporate carts fetched successfully: ${res.rowCount} carts`);
-            logger.info('Carts data:', res.rows);
         }
 
         return res.rows;
@@ -187,29 +184,31 @@ const insertCorporateOrderDetails = async (corporateorder_id, processing_date,de
 
    // Function to get order_details and corporateorder_generated_id
    const getOrderDetailsById = async (customer_id) => {
+    console.log("in model",customer_id
+    )
     const query = `
       SELECT corporateorder_generated_id, order_details,ordered_at
       FROM corporate_orders 
-      WHERE customer_id = $1 AND payment_status='success'
+      WHERE customer_id = $1 AND payment_status='Success'
     `;
     
     const values = [customer_id];
     
     try {
       const result = await client.query(query, values);
-      console.log(result.rows)
+      logger.info("all orders:",result.rows)
       return result.rows; // Return the first matching row
     } catch (error) {
       throw new Error('Error retrieving corporate order details: ' + error.message);
     }
   }
 
-  const insertCartToOrder= async(order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id)=>{
+  const insertCartToOrder= async(order_details , customer_id , total_amount , customer_address , payment_status , corporateorder_generated_id)=>{
     try {
         logger.info('in model', corporateorder_generated_id)
         const result = await client.query(
             DB_COMMANDS.INSERT_CART_TO_ORDER,
-            [order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id]
+            [order_details , customer_id , total_amount , customer_address , payment_status , corporateorder_generated_id]
         );
         
         logger.info('Cart Data added to orders table in model',result);

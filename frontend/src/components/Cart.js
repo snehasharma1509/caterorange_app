@@ -224,20 +224,19 @@ const MyCart = () => {
         order_details: OrderDataJSON,
         customer_id: userData.id,
         total_amount: Total,
-        payment_id: null,
         customer_address: 'abc123',
-        payment_status: 'success',
+        payment_status: 'pending',
         corporateorder_generated_id: 'ABC345'
       });
   
       // Set the order details from the response
       setOrderDetails(response.data.order);
-  
+      console.log("checking",response.data)
       if (response.status === 200) {
         console.log('Cart details added to orders', response.data.order);
   
         // Now call the function to handle the second API request
-        await PaymentDetails();
+        await PaymentDetails(response.data.order.corporateorder_id);
         await sendOrderDetails(response.data.order);
       } else {
         console.error('Failed to add details to order_table:', response.data);
@@ -279,12 +278,12 @@ const MyCart = () => {
     }
   };
 
-  const PaymentDetails= async()=>{
+  const PaymentDetails= async(corporateorder_id)=>{
     try{
 
           const token=localStorage.getItem('accessToken')
           const response = await axios.post('http://localhost:7000/pay', 
-            {amount: Total},{headers: { access_token: `${localStorage.getItem('accessToken')}` },
+            {amount: Total,corporateorder_id:corporateorder_id},{headers: { access_token: `${localStorage.getItem('accessToken')}` },
           });
           if (response.data && response.data.redirectUrl) {
             setRedirectUrl(response.data.redirectUrl);

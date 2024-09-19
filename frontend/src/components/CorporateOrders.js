@@ -230,6 +230,7 @@ const CorporateOrders = () => {
       setIsLoading(true);
       setError(null);
       try {
+        console.log('hiiiiii')
         const token = localStorage.getItem('accessToken');
         const response = await axios.get('http://localhost:7000/customer/corporate/myorders', {
           headers: { token: `${token}` },
