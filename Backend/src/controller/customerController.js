@@ -318,7 +318,6 @@ const add_Corporate_Cart = async (req,res) =>{
         }
 
         const customer_id = customer.customer_id;
-       logger.info('customer_id',customer_id)
         const newCart = await customer_model.add_cart(customer_id, cart_order_details, total_amount);
 
         if (!newCart) {
@@ -328,7 +327,6 @@ const add_Corporate_Cart = async (req,res) =>{
 
         // Log the blog creation
         logger.info('cart added successfully');
-logger.info('in controller newCart',newCart)
         // Respond with the newly created blog details
         res.json({
             success: true,
@@ -361,10 +359,7 @@ const getCorporateCart = async (req,res)=>{
     }
 
     const customer_id = customer.customer_id;
-   logger.info('customer_id',customer_id)
         const carts= await customer_model.getCarts( customer_id )
-         
-        logger.info('carts in controller',carts)
        
         return res.json(
             carts
@@ -411,13 +406,10 @@ const getCustomerDetails= async(req, res)=>{
 
 const updateCartItem= async(req,res) =>{
     try {
-        console.log('in updatecartitem')
         const corporatecart_id=req.params.corporatecart_id;
-        console.log("id is",corporatecart_id)
         const {date,quantity}=req.body; 
 
         const result = await customer_model.updateQuantity(corporatecart_id,date,quantity);
-        console.log('success in controller for update data')
         return res.json({
             success: true
         });
@@ -427,13 +419,9 @@ const updateCartItem= async(req,res) =>{
 }
 const deleteCartItem = async (req, res) => {
     try {
-      console.log('In deleteCartItem');
       
       const corporatecart_id = req.params.corporatecart_id;
       const { date } = req.body;  // Destructure date from req.body
-      
-      console.log('Corporate Cart ID:', corporatecart_id);
-      console.log('Date in controller:', date);
   
       if (!date) {
         return res.status(400).json({ error: 'Date is required' });
@@ -458,7 +446,6 @@ const deleteCartItem = async (req, res) => {
   
         // Insert into the database using the model
         const insertedDetail = await customer_model.insertCorporateOrderDetails(corporateorder_id, processing_date,delivery_status,category_id,quantity,active_quantity,media, delivery_details );
-       console.log("inse3rted details ",insertedDetail)
   
     res.status(201).json({
       success: true,
@@ -495,7 +482,6 @@ const deleteCartItem = async (req, res) => {
         }
 
         const customer_id = customer.customer_id;
-        console.log('id',customer_id)
       const order = await customer_model.getOrderDetailsById(customer_id);
       
 
@@ -516,13 +502,10 @@ const deleteCartItem = async (req, res) => {
 
   const transferCartToOrder = async (req, res) => {
     const { order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id } = req.body;
-    console.log("generated id",corporateorder_generated_id)
     try {
       // Insert the cart data into event_orders
       const order = await customer_model.insertCartToOrder(order_details , customer_id , total_amount , payment_id , customer_address , payment_status , corporateorder_generated_id );
-     
-      console.log("this is order details:",order)
-      console.log('Success in controller for tarnsferring data to orders');
+    
       return res.json({
         success: true,
         order
@@ -537,8 +520,6 @@ const deleteCartItem = async (req, res) => {
 
      try{
         const categoryname= await customer_model.getcategoryname(categoryId);
-
-        console.log('category name in controler', categoryname);
         return res.json({
             success: true,
             categoryname

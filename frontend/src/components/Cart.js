@@ -227,7 +227,7 @@ const MyCart = () => {
         payment_id: null,
         customer_address: 'abc123',
         payment_status: 'success',
-        corporateorder_generated_id: 'HS123'
+        corporateorder_generated_id: 'ABC345'
       });
   
       // Set the order details from the response
