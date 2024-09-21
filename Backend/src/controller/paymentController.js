@@ -1,7 +1,12 @@
-const client = require('../config/db.js');
-const paymentmodel = require('../model/paymentModel.js')
+const client = require('../config/dbConfig.js');
+const paymentmodel = require('../models/paymentModels.js')
+const logger = require('../config/logger.js');
+const jwt = require('jsonwebtoken');
+
 const payment = async (req, res) => {
   const { paymentType, merchantTransactionId, phonePeReferenceId, paymentFrom, instrument, bankReferenceNo, amount, customer_id,corporateorder_id } = req.body;
+
+  const SECRET_KEY = process.env.SECRET_KEY;
 
   const insertPaymentQuery = `
     INSERT INTO payment (
@@ -41,7 +46,7 @@ const payment = async (req, res) => {
     // Assume you have the order_id and payment_status from somewhere
     const order_id = corporateorder_id; // or however you get it
     const payment_status = 'Success'; // or however you determine the status
-
+console.log(order_id);
     // Now update the corporate order with the generated payment_id
     await updateCorporateOrder(order_id, generatedPaymentId, payment_status);
 
@@ -53,14 +58,12 @@ const payment = async (req, res) => {
 };
 
   const updateCorporateOrder = async (order_id, paymentid, payment_status) => {
-    
-
   
 
     try {
         // Update corporate order details in the database
         const result = await paymentmodel.updateOrder(order_id, paymentid, payment_status);
-
+console.log('result in pay',result);
         if (result.rowCount > 0) {
             console.log('Corporate order updated successfully' );
         } else {
@@ -71,4 +74,39 @@ const payment = async (req, res) => {
         //res.status(500).json({ message: 'Error updating corporate order' });
     }
 };
-  module.exports ={payment,updateCorporateOrder }
+
+const getOrdergenId=async(req,res)=>{
+  try{
+  const token = req.headers['token'];
+     
+      let verified_data;
+
+        try {
+          verified_data = jwt.verify(token, process.env.SECRET_KEY);
+         
+        } catch (err) {
+          logger.error('Token verification failed:', err);
+          if (err instanceof jwt.TokenExpiredError) {
+            return res.status(401).json({ success: false, message: 'Token has expired' });
+          } else if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ success: false, message: 'Invalid token' });
+          } else {
+            return res.status(401).json({ success: false, message: 'Token verification failed' });
+          }
+        }
+
+      const customer_id = verified_data.id;
+      const order_generated_id= await paymentmodel.getOrdergenId(customer_id);
+
+      res.status(200).json({ order_genid: order_generated_id });
+  }catch (error) {
+      console.error("Error fetching order generated id: ", error);
+      res.status(500).json({ message: "Error fetching order generated id", error });
+    }
+
+}
+
+
+
+
+  module.exports ={payment,updateCorporateOrder,getOrdergenId }

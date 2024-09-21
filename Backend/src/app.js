@@ -1,36 +1,71 @@
-//app.js
 const express = require('express');
-const logger = require('./config/logger.js');
-const client = require('./config/db.js'); 
-///const paymentroutes = require('./routes/paymentroutes.js');
-
-const allRoutes = require('./routes/allroutes.js');
-
-const app = express();
-const jwt=require('jsonwebtoken')
-const cors= require('cors');
+const client = require('./config/dbConfig');
+const cors=require('cors')     
+const logger = require('./config/logger');
+const { createTables } = require('./controller/tableController');
+const { createDatabase } = require('./config/config');
+require('dotenv').config();
 const sha256 = require('sha256');
 const axios = require('axios');
 const uniqid = require('uniqid');
 const crypto = require('crypto');
-const {jwtDecode} =require('jwt-decode')
+const { jwtDecode } =require('jwt-decode')
+const jwt=require('jsonwebtoken')
+const allRoutes = require('./routes/customerRoutes.js');
+const adminRoutes = require('./routes/adminRoutes');
+const paymentRoutes = require('./routes/paymentRoutes.js');
+const addressRoutes = require('./routes/addressRoutes');
+const eventRoutes = require('./routes/eventorderRoutes.js');
+const corporateorderRoutes = require('./routes/corporateorderRoutes.js');
+const categoryRoutes= require('./routes/categoryRoutes.js');
+const customerRoutes= require('./routes/customerRoutes.js');
 
-const corsOptions = {
-    origin: 'http://localhost:3000', // Update with your frontend origin
-    optionsSuccessStatus: 200,
-  };
-  
-  app.use(cors(corsOptions));
-  
+
+const app = express();
 app.use(express.json());
+const corsOptions = {
+  origin: 'http://localhost:3000', // Update with your frontend origin
+  optionsSuccessStatus: 200,
+};
 
+app.use(cors(corsOptions));
+
+
+app.use('/', adminRoutes);
+app.use('/',addressRoutes)
+app.use('/',paymentRoutes)
+app.use('/',categoryRoutes);
+app.use('/',customerRoutes)
+
+app.use('/', corporateorderRoutes);
+
+const initializeApp = async () => {
+  try {
+    await createDatabase();
+    logger.info('Database created or already exists');
+
+    await client.connect();
+    logger.info('Connected to the Caterorange DB');
+
+    await createTables();
+    logger.info('Tables created successfully');
+
+    app.use(express.json());
+
+    app.listen(process.env.PORT, () => {
+      logger.info(`Server is running on port ${process.env.PORT}`);
+    });
+  } catch (err) {
+    logger.error('Initialization error:', err.message);
+    process.exit(1);
+  }
+};
 const PHONEPE_HOST_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox";
 const MERCHANT_ID = "PGTESTPAYUAT86";
 const SALT_KEY = "96434309-7796-489d-8924-ab56988a6076";
 const SALT_INDEX = 1;
 
 //Routes
-app.use('/', allRoutes);
 //app.use('/p', paymentroutes);
 
 
@@ -91,7 +126,7 @@ app.post("/pay", async(req, res) => {
   const merchantTransactionId = uniqid();
   const {amount,corporateorder_id } = req.body;
   console.log("hello")
-  const token = req.headers["access_token"]
+  const token = req.headers["token"]
   const decode = jwt.decode(token);
   console.log(decode);
   const customer_id = decode.id;
@@ -106,7 +141,7 @@ app.post("/pay", async(req, res) => {
     "merchantTransactionId": merchantTransactionId,
     "merchantUserId": 123,
     "amount": amountinrupee,
-    "redirectUrl": `http://localhost:7000/redirect-url/${merchantTransactionId}?customer_id=${customer_id}&corporateorder_id=${corporateorder_id}`,
+    "redirectUrl": `http://localhost:4000/redirect-url/${merchantTransactionId}?customer_id=${customer_id}&corporateorder_id=${corporateorder_id}`,
     "redirectMode": "REDIRECT",
     "callbackUrl": "https://webhook.site/callback-url",
     "mobileNumber": "9999999999",
@@ -189,7 +224,7 @@ app.get('/redirect-url/:merchantTransactionId', async(req, res) => {
 
           // Make an Axios POST request to the new API for inserting the payment
           try {
-            const response=await axios.post('http://localhost:7000/insert-payment', paymentPayload);
+            const response=await axios.post('http://localhost:4000/insert-payment', paymentPayload);
         res.status(200);
           } catch (error) {
             console.error("Error in sending payment data: ", error);
@@ -210,9 +245,8 @@ app.get('/redirect-url/:merchantTransactionId', async(req, res) => {
     res.status(400).send({ error: 'Error' });
   }
 });
+initializeApp();
+app.use('/', allRoutes);
+app.use('/',eventRoutes);
 
-// Port connection
-const PORT = process.env.PORT || 7000;
-app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT}`);
-});
+

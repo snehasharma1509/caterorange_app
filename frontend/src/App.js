@@ -1,106 +1,80 @@
+import SignInForm from "./components/customer/SignInForm.js";
+import { SignInProvider } from './services/contexts/SignInContext.js';
+import { SignUpProvider } from './services/contexts/SignUpContext.js';
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
-import SignInForm from './components/SignInForm';
-import SignUpForm from './components/SignUpForm';
-import Home from './components/home';
-import Corporatecart from './components/Cart';
-import StoreProvider from './services/contextapi_state_management/store';
-import { jwtDecode } from 'jwt-decode';
-import CorporateOrders from './components/CorporateOrders';
-import SuccessPage from './components/SuccessPage';
-import PendingPage from './components/PendingPage';
-import Failurepage from './components/Failurepage';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import Home from "./components/corporate/Home.js";
+import Corporatecart from './components/corporate/Cart';
+import StoreProvider from "./services/contexts/store.js";
+import CorporateOrders from "./components/corporate/CorporateOrders.js";
+import SuccessPage from "./components/corporate/payments/SuccessPage.js";
+import FailurePage from "./components/corporate/payments/Failurepage.js";
+import PendingPage from "./components/corporate/payments/PendingPage.js";
+import axios from "axios";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [isGoogleLogin, setIsGoogleLogin] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const userProfile = localStorage.getItem('userProfile');
-    if (token && userProfile) {
-      setUser({
-        token,
-        ...JSON.parse(userProfile)
+  const handleSignIn =async (token,isGoogleLogin) => {
+    console.log('hi im in app')
+    if (token) {
+      localStorage.setItem('token', token);
+      setUser({ token });
+    }
+    
+if(!isGoogleLogin){
+    try {
+      console.log('in manual',token)
+      const response = await axios.get('http://localhost:4000/customer/info', {
+        headers: { token }
       });
-      setIsGoogleLogin(true);
-    }
-  }, []);
-
-  const handleSignIn = async (token, isGoogleLogin) => {
-    console.log('entered App.js');
-    console.log(token, isGoogleLogin);
-    localStorage.setItem('accessToken', token);
-    // localStorage.setItem('isGoogleLogin', isGoogleLogin);
-
-    if (isGoogleLogin) {
-      // Logic for handling Google login
-      const decoded = jwtDecode(token);
+      console.log('RESPONSE', response.data)
       const profile = {
-        name: decoded.name,
-        email: decoded.email,
-        profilePicture: decoded.picture // Google provides the picture URL in the token
+        name: response.data.customer_name,
+        phone: response.data.customer_phonenumber,
+        email: response.data.customer_email
       };
-      localStorage.setItem('userProfile', JSON.stringify(profile));
+      const a= localStorage.setItem('userData', JSON.stringify(profile));
+      console.log('a',a);
       setUser({ token, ...profile });
-      setIsGoogleLogin(true);
-    } else {
-      // Manual login logic (already existing)
-      try {
-        const response = await axios.get('http://localhost:7000/customer/info', {
-          headers: { token }
-        });
-        const profile = {
-          name: response.data.customer_name,
-          phone: response.data.customer_phonenumber,
-          email: response.data.customer_email,
-          profilePicture: 'https://via.placeholder.com/50' // Placeholder or from backend
-        };
-        localStorage.setItem('userProfile', JSON.stringify(profile));
-        setUser({ token, ...profile });
-        setIsGoogleLogin(false);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
+      console.log('user data', user)
+      setIsGoogleLogin(false);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
     }
-  };
+  }
+}
 
+
+
+  
   return (
     <StoreProvider>
-      <Router>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              user ? <Navigate to="/home" /> : <SignInForm onSignIn={handleSignIn} />
-            }
-          />
-          <Route
-            path="/"
-            element={
-              user ? <Navigate to="/home" /> : <SignUpForm onSignUp={handleSignIn} />
-            }
-          />
-          <Route
-            path="/home/*"
-            element={
-              user ? <Home user={user}/> : <Navigate to="/" />
-            }
-          />
-          <Route
+    <SignInProvider>
+      <SignUpProvider>
+        <Router>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user ? <Navigate to="/home" /> : <SignInForm onSignIn={handleSignIn} />
+                
+              }
+            />
+            <Route path="/home" element={<Home user={user}/>} />
+            <Route
             path="/cart"
-            element={user ? <Corporatecart user={user} /> : <Navigate to="/" />}
-          />
-          <Route
+            element={<Corporatecart/>}/>
+             <Route
             path="/orders"
-            element={user ? <CorporateOrders user={user} /> : <Navigate to="/" />}
-          />
-          <Route path="/success" element={<SuccessPage />} />
-        <Route path="/failure" element={<Failurepage />} />
+            element={<CorporateOrders/>}/>
+              <Route path="/success" element={<SuccessPage />} />
+        <Route path="/failure" element={<FailurePage />} />
         <Route path="/pending" element={<PendingPage/>}/>
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </SignUpProvider>
+    </SignInProvider>
     </StoreProvider>
   );
 }
